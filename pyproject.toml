@@ -1,6 +1,6 @@
 [project]
-name = "testsolar_testtool_sdk"
-version = "0.1"
+name = "testsolar-testtool-sdk"
+version = "0.0.1"
 description = "TestSolar测试工具SDK"
 authors = [
     {name = "asiazhang", email = "asiazhang2002@gmail.com"},
