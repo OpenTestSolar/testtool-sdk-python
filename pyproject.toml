@@ -1,5 +1,5 @@
 [project]
-name = "testsolar_testool_sdk"
+name = "testsolar_testtool_sdk"
 version = "0.1"
 description = "TestSolar测试工具SDK"
 authors = [
