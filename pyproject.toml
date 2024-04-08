@@ -1,13 +1,12 @@
 [project]
 name = "testsolar-testtool-sdk"
-version = "0.0.1"
+version = "0.0.2"
 description = "TestSolar测试工具SDK"
 authors = [
     {name = "asiazhang", email = "asiazhang2002@gmail.com"},
 ]
 dependencies = [
-    "pydantic>=2.5.3",
-    "loguru>=0.7.2",
+    "pydantic>=2.1.1",
     "portalocker>=2.8.2",
 ]
 requires-python = ">=3.8"

@@ -1,11 +1,11 @@
 import hashlib
 import os
 import struct
+import logging
 from enum import Enum
 from typing import Optional, BinaryIO
 
 import portalocker
-from loguru import logger
 from pydantic import BaseModel
 
 from .model.load import LoadResult
@@ -74,18 +74,18 @@ class Reporter:
         # 将 JSON 数据本身写入管道
         self.pipe_io.write(data)
 
-        logger.debug(f"Sending {length} bytes to pipe {PIPE_WRITER}")
+        logging.debug(f"Sending {length} bytes to pipe {PIPE_WRITER}")
 
         self.pipe_io.flush()
 
     def _write_load_file(self, load_result: LoadResult) -> None:
         with open(os.path.join(self.report_path, 'result.json'), "wb") as f:
-            logger.debug(f"Writing load results to {self.report_path}")
+            logging.debug(f"Writing load results to {self.report_path}")
             f.write(load_result.model_dump_json(by_alias=True, indent=2).encode('utf-8'))
 
     def _write_case_result(self, case_result: TestResult) -> None:
         retry_id = case_result.test.attrs.get('retry', '0')
         filename = hashlib.md5(f"{case_result.test.name}.{retry_id}".encode('utf-8')).hexdigest() + ".json"
         with open(os.path.join(self.report_path, filename), "wb") as f:
-            logger.debug(f"Writing case results to {self.report_path}")
+            logging.debug(f"Writing case results to {self.report_path}")
             f.write(case_result.model_dump_json(by_alias=True, indent=2).encode('utf-8'))
