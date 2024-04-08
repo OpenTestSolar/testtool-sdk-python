@@ -31,12 +31,16 @@ class AttachmentType(str, Enum):
 
 
 class TestCaseAssertError(BaseModel):
+    __test__ = False
+
     expect: str = Field(alias="Expect")
     actual: str = Field(alias="Actual")
     message: str = Field(alias="Message")
 
 
 class TestCaseRuntimeError(BaseModel):
+    __test__ = False
+
     summary: str = Field(alias="Summary")
     detail: str = Field(alias="Detail")
 
@@ -48,6 +52,8 @@ class Attachment(BaseModel):
 
 
 class TestCaseLog(BaseModel):
+    __test__ = False
+
     time: str = Field(alias="Time")
     level: LogLevel = Field(alias="Level")
     content: str = Field(alias="Content")
@@ -57,6 +63,8 @@ class TestCaseLog(BaseModel):
 
 
 class TestCaseStep(BaseModel):
+    __test__ = False
+
     start_time: str = Field(alias="StartTime")
     end_time: Optional[str] = Field(alias="EndTime")
     title: str = Field(alias="Title")
@@ -64,6 +72,8 @@ class TestCaseStep(BaseModel):
 
 
 class TestResult(BaseModel):
+    __test__ = False
+
     test: TestCase = Field(alias="Test")
     start_time: str = Field(alias="StartTime")
     end_time: Optional[str] = Field(alias="EndTime")

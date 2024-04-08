@@ -30,7 +30,7 @@ jobs:
         pdm install -d
     - name: Lint with ruff
       run: |
-        pdm run ruff src
+        pdm run ruff check src
     - name: Test with pytest
       run: |
         pdm run pytest --durations=5 --cov=. --cov-report term -vv
