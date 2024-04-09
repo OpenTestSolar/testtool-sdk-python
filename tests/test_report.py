@@ -2,7 +2,7 @@ import concurrent.futures
 import io
 import logging
 import random
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
 from typing import BinaryIO
 from functools import partial
 
@@ -59,11 +59,11 @@ def generate_demo_load_result() -> LoadResult:
 
 
 def generate_test_result(index: int) -> TestResult:
-    start: datetime = datetime.now(UTC) - timedelta(seconds=40)
+    start: datetime = datetime.utcnow() - timedelta(seconds=40)
     _tr = TestResult(
         Test=TestCase(Name=f"mumu/mu.py/test_case_name_{index}_p1", Attributes={}),
         StartTime=_format_datetime(start),
-        EndTime=_format_datetime(datetime.now(UTC)),
+        EndTime=_format_datetime(datetime.utcnow()),
         ResultType=ResultType.SUCCEED,
         Message="ファイルが見つかりません。ファイルパスを確認して、もう一度試してください。",
         Steps=[generate_testcase_step(f"{index}_{x}") for x in range(10)],
@@ -73,7 +73,7 @@ def generate_test_result(index: int) -> TestResult:
 
 
 def generate_testcase_log(index: str) -> TestCaseLog:
-    start: datetime = datetime.now(UTC) - timedelta(seconds=15)
+    start: datetime = datetime.utcnow() - timedelta(seconds=15)
 
     return TestCaseLog(
         Time=_format_datetime(start),
@@ -93,10 +93,10 @@ def generate_testcase_log(index: str) -> TestCaseLog:
 
 
 def generate_testcase_step(index: str) -> TestCaseStep:
-    start: datetime = datetime.now(UTC) - timedelta(seconds=10)
+    start: datetime = datetime.utcnow() - timedelta(seconds=10)
     return TestCaseStep(
         StartTime=_format_datetime(start),
-        EndTime=_format_datetime(datetime.now(UTC)),
+        EndTime=_format_datetime(datetime.utcnow()),
         Title=get_random_unicode(100),
         Logs=[generate_testcase_log(f"{index}_{x}") for x in range(100)],
     )
