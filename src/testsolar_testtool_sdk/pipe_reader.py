@@ -1,9 +1,9 @@
 import struct
 from typing import BinaryIO
 
-from src.testsolar_testtool_sdk.model.load import LoadResult
-from testsolar_testtool_sdk.model.testresult import TestResult
-from testsolar_testtool_sdk.reporter import MAGIC_NUMBER
+from .model.load import LoadResult
+from .model.testresult import TestResult
+from .reporter import MAGIC_NUMBER
 
 
 # 从管道读取加载结果，仅供单元测试使用
