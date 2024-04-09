@@ -1,10 +1,11 @@
 import concurrent.futures
 import io
+import json
 import logging
 import random
 from datetime import datetime, timedelta
-from typing import BinaryIO
 from functools import partial
+from typing import BinaryIO
 
 from src.testsolar_testtool_sdk.model.load import LoadResult, LoadError
 from src.testsolar_testtool_sdk.model.test import TestCase
@@ -20,10 +21,6 @@ from src.testsolar_testtool_sdk.reporter import Reporter, ReportType
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-
-def _format_datetime(t: datetime) -> str:
-    return t.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
 def generate_demo_load_result() -> LoadResult:
@@ -62,8 +59,8 @@ def generate_test_result(index: int) -> TestResult:
     start: datetime = datetime.utcnow() - timedelta(seconds=40)
     _tr = TestResult(
         Test=TestCase(Name=f"mumu/mu.py/test_case_name_{index}_p1", Attributes={}),
-        StartTime=_format_datetime(start),
-        EndTime=_format_datetime(datetime.utcnow()),
+        StartTime=start,
+        EndTime=datetime.utcnow(),
         ResultType=ResultType.SUCCEED,
         Message="ファイルが見つかりません。ファイルパスを確認して、もう一度試してください。",
         Steps=[generate_testcase_step(f"{index}_{x}") for x in range(10)],
@@ -76,7 +73,7 @@ def generate_testcase_log(index: str) -> TestCaseLog:
     start: datetime = datetime.utcnow() - timedelta(seconds=15)
 
     return TestCaseLog(
-        Time=_format_datetime(start),
+        Time=start,
         Level=LogLevel.INFO,
         Attachments=[
             # Attachment(
@@ -95,8 +92,8 @@ def generate_testcase_log(index: str) -> TestCaseLog:
 def generate_testcase_step(index: str) -> TestCaseStep:
     start: datetime = datetime.utcnow() - timedelta(seconds=10)
     return TestCaseStep(
-        StartTime=_format_datetime(start),
-        EndTime=_format_datetime(datetime.utcnow()),
+        StartTime=start,
+        EndTime=datetime.utcnow(),
         Title=get_random_unicode(100),
         Logs=[generate_testcase_log(f"{index}_{x}") for x in range(100)],
     )
@@ -154,6 +151,19 @@ def send_test_result(pipe_io: BinaryIO):
     run_case_result = generate_test_result(0)
     test_results.append(run_case_result)
     reporter.report_run_case_result(run_case_result)
+
+
+def test_datetime_formatted():
+    run_case_result = generate_test_result(0)
+    data = run_case_result.model_dump_json(by_alias=True, indent=2)
+    tr = json.loads(data)
+    assert tr['StartTime'].endswith("Z")
+    assert tr['EndTime'].endswith("Z")
+
+    assert tr['Steps'][0]['StartTime'].endswith("Z")
+    assert tr['Steps'][0]['EndTime'].endswith("Z")
+
+    assert tr['Steps'][0]['Logs'][0]['Time'].endswith("Z")
 
 
 def test_report_run_case_result():
