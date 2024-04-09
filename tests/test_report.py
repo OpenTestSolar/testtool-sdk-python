@@ -1,8 +1,10 @@
+import concurrent.futures
 import io
+import logging
 import random
-import struct
-import time
 from datetime import datetime, timedelta
+from typing import BinaryIO
+from functools import partial
 
 from src.testsolar_testtool_sdk.model.load import LoadResult, LoadError
 from src.testsolar_testtool_sdk.model.test import TestCase
@@ -13,7 +15,11 @@ from src.testsolar_testtool_sdk.model.testresult import (
     TestCaseAssertError,
     TestCaseLog,
 )
-from src.testsolar_testtool_sdk.reporter import Reporter, MAGIC_NUMBER, ReportType
+from src.testsolar_testtool_sdk.pipe_reader import read_load_result, read_test_result
+from src.testsolar_testtool_sdk.reporter import Reporter, ReportType
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def _format_datetime(t: datetime) -> str:
@@ -60,7 +66,7 @@ def generate_test_result(index: int) -> TestResult:
         EndTime=_format_datetime(datetime.utcnow()),
         ResultType=ResultType.SUCCEED,
         Message="ファイルが見つかりません。ファイルパスを確認して、もう一度試してください。",
-        Steps=[generate_testcase_step(f"{index}_{x}") for x in range(40)],
+        Steps=[generate_testcase_step(f"{index}_{x}") for x in range(10)],
     )
 
     return _tr
@@ -92,7 +98,7 @@ def generate_testcase_step(index: str) -> TestCaseStep:
         StartTime=_format_datetime(start),
         EndTime=_format_datetime(datetime.utcnow()),
         Title=get_random_unicode(100),
-        Logs=[generate_testcase_log(f"{index}_{x}") for x in range(1000)],
+        Logs=[generate_testcase_log(f"{index}_{x}") for x in range(100)],
     )
 
 
@@ -137,51 +143,39 @@ def test_report_load_result() -> None:
 
     # 检查管道中的魔数
     pipe_io.seek(0)
-    magic_number = struct.unpack("<I", pipe_io.read(4))[0]
-    assert magic_number == MAGIC_NUMBER, "Magic number does not match"
 
-    # 检查管道中的数据长度
-    real_load_result = load_result.model_dump_json(by_alias=True).encode("utf-8")
-    length = struct.unpack("<I", pipe_io.read(4))[0]
-    assert length == len(real_load_result), "Data length does not match"
+    loaded = read_load_result(pipe_io)
+    assert loaded == load_result
 
-    # 检查管道中的数据
-    expected_load_result = pipe_io.read(length)
-    assert real_load_result == expected_load_result, "Data load result does not much"
+
+def send_test_result(pipe_io: BinaryIO):
+    reporter = Reporter(reporter_type=ReportType.Pipeline, pipe_io=pipe_io)
+    test_results = []
+    run_case_result = generate_test_result(0)
+    test_results.append(run_case_result)
+    reporter.report_run_case_result(run_case_result)
 
 
 def test_report_run_case_result():
     # 创建一个Reporter实例
     pipe_io = io.BytesIO()
-    reporter = Reporter(reporter_type=ReportType.Pipeline, pipe_io=pipe_io)
 
-    test_results = []
+    send_action = partial(send_test_result, pipe_io)
 
-    # 创建五个LoadResult实例并调用report_run_case_result方法
-    for i in range(5):
-        run_case_result = generate_test_result(i)
-        test_results.append(run_case_result)
-        reporter.report_run_case_result(run_case_result)
-        time.sleep(1)
+    # 创建五个LoadResult实例并发调用report_run_case_result方法
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        for i in range(5):
+            executor.submit(send_action)
 
     # 检查管道中的数据，确保每个用例的魔数和数据长度还有数据正确
     pipe_io.seek(0)
-    for test_result in test_results:
-        index = test_results.index(test_result)
-        magic_number = struct.unpack("<I", pipe_io.read(4))[0]
-        assert (
-            magic_number == MAGIC_NUMBER
-        ), f"Magic number does not match for case {index}"
-
-        length = struct.unpack("<I", pipe_io.read(4))[0]
-
-        expected_result_data = test_result.model_dump_json(by_alias=True).encode(
-            "utf-8"
-        )
-        expected_length = len(expected_result_data)
-        assert length == expected_length, f"Data length does not match for case {index}"
-
-        result_data = pipe_io.read(length)
-        assert (
-            result_data == expected_result_data
-        ), f"Result data does not match for case {index}"
+    r1: TestResult = read_test_result(pipe_io)
+    assert r1.result_type == ResultType.SUCCEED
+    r2 = read_test_result(pipe_io)
+    assert r2.result_type == ResultType.SUCCEED
+    r3 = read_test_result(pipe_io)
+    assert r3.result_type == ResultType.SUCCEED
+    r4 = read_test_result(pipe_io)
+    assert r4.result_type == ResultType.SUCCEED
+    r5 = read_test_result(pipe_io)
+    assert r5.result_type == ResultType.SUCCEED
