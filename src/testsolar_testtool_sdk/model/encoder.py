@@ -1,12 +1,12 @@
 import json
-import datetime
+from datetime import datetime
 
 from typing import Any
 
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj) -> Any:
-        if isinstance(obj, datetime.datetime):
+        if isinstance(obj, datetime):
             return _format_datetime(obj)
         else:
             return super().default(obj)
