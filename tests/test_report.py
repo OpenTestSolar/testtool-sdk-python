@@ -6,7 +6,6 @@ import logging
 import random
 from datetime import datetime, timedelta
 from functools import partial
-from typing import BinaryIO
 
 from src.testsolar_testtool_sdk.model.encoder import DateTimeEncoder
 from src.testsolar_testtool_sdk.model.load import LoadResult, LoadError
@@ -19,7 +18,7 @@ from src.testsolar_testtool_sdk.model.testresult import (
     TestCaseLog,
 )
 from src.testsolar_testtool_sdk.pipe_reader import read_load_result, read_test_result
-from src.testsolar_testtool_sdk.reporter import Reporter, ReportType
+from src.testsolar_testtool_sdk.reporter import Reporter
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -132,23 +131,21 @@ def get_random_unicode(length) -> str:
 def test_report_load_result() -> None:
     # 创建一个Reporter实例
     pipe_io = io.BytesIO()
-    reporter = Reporter(reporter_type=ReportType.Pipeline, pipe_io=pipe_io)
+    with Reporter(pipe_io=pipe_io) as reporter:
+        # 创建一个LoadResult实例
+        load_result = generate_demo_load_result()
 
-    # 创建一个LoadResult实例
-    load_result = generate_demo_load_result()
+        # 调用report_load_result方法
+        reporter.report_load_result(load_result)
 
-    # 调用report_load_result方法
-    reporter.report_load_result(load_result)
+        # 检查管道中的魔数
+        pipe_io.seek(0)
 
-    # 检查管道中的魔数
-    pipe_io.seek(0)
-
-    loaded = read_load_result(pipe_io)
-    assert loaded == load_result
+        loaded = read_load_result(pipe_io)
+        assert loaded == load_result
 
 
-def send_test_result(pipe_io: BinaryIO):
-    reporter = Reporter(reporter_type=ReportType.Pipeline, pipe_io=pipe_io)
+def send_test_result(reporter: Reporter):
     test_results = []
     run_case_result = generate_test_result(0)
     test_results.append(run_case_result)
@@ -171,23 +168,22 @@ def test_datetime_formatted():
 def test_report_run_case_result():
     # 创建一个Reporter实例
     pipe_io = io.BytesIO()
+    with Reporter(pipe_io=pipe_io) as reporter:
+        # 创建五个LoadResult实例并发调用report_run_case_result方法
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            send_action = partial(send_test_result, reporter)
+            for i in range(5):
+                executor.submit(send_action)
 
-    send_action = partial(send_test_result, pipe_io)
-
-    # 创建五个LoadResult实例并发调用report_run_case_result方法
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        for i in range(5):
-            executor.submit(send_action)
-
-    # 检查管道中的数据，确保每个用例的魔数和数据长度还有数据正确
-    pipe_io.seek(0)
-    r1: TestResult = read_test_result(pipe_io)
-    assert r1.ResultType == ResultType.SUCCEED
-    r2 = read_test_result(pipe_io)
-    assert r2.ResultType == ResultType.SUCCEED
-    r3 = read_test_result(pipe_io)
-    assert r3.ResultType == ResultType.SUCCEED
-    r4 = read_test_result(pipe_io)
-    assert r4.ResultType == ResultType.SUCCEED
-    r5 = read_test_result(pipe_io)
-    assert r5.ResultType == ResultType.SUCCEED
+        # 检查管道中的数据，确保每个用例的魔数和数据长度还有数据正确
+        pipe_io.seek(0)
+        r1: TestResult = read_test_result(pipe_io)
+        assert r1.ResultType == ResultType.SUCCEED
+        r2 = read_test_result(pipe_io)
+        assert r2.ResultType == ResultType.SUCCEED
+        r3 = read_test_result(pipe_io)
+        assert r3.ResultType == ResultType.SUCCEED
+        r4 = read_test_result(pipe_io)
+        assert r4.ResultType == ResultType.SUCCEED
+        r5 = read_test_result(pipe_io)
+        assert r5.ResultType == ResultType.SUCCEED
