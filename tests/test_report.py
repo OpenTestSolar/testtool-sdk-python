@@ -150,7 +150,7 @@ def send_test_result(reporter: Reporter):
     test_results = []
     run_case_result = generate_test_result(0)
     test_results.append(run_case_result)
-    reporter.report_run_case_result(run_case_result)
+    reporter.report_case_result(run_case_result)
 
 
 def test_datetime_formatted():
