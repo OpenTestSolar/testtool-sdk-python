@@ -1,13 +1,15 @@
+import dataclasses
 import hashlib
+import json
+import logging
 import os
 import struct
-import logging
 from enum import Enum
 from typing import Optional, BinaryIO
 
 import portalocker
-from pydantic import BaseModel
 
+from .model.encoder import DateTimeEncoder
 from .model.load import LoadResult
 from .model.testresult import TestResult
 
@@ -46,14 +48,14 @@ class Reporter:
     def report_load_result(self, load_result: LoadResult) -> None:
         if self.reporter_type == ReportType.Pipeline:
             with portalocker.Lock(self.lock_file, timeout=60):
-                self._send_json(load_result)
+                self._send_json(dataclasses.asdict(load_result))
         elif self.reporter_type == ReportType.File:
             self._write_load_file(load_result)
 
     def report_run_case_result(self, run_case_result: TestResult) -> None:
         if self.reporter_type == ReportType.Pipeline:
             with portalocker.Lock(self.lock_file, timeout=60):
-                self._send_json(run_case_result)
+                self._send_json(dataclasses.asdict(run_case_result))
         elif self.reporter_type == ReportType.File:
             self._write_case_result(run_case_result)
 
@@ -61,8 +63,8 @@ class Reporter:
         if self.pipe_io:
             self.pipe_io.close()
 
-    def _send_json(self, result: BaseModel) -> None:
-        data = result.model_dump_json(by_alias=True).encode("utf-8")
+    def _send_json(self, result: dict) -> None:
+        data = json.dumps(result, cls=DateTimeEncoder).encode('utf-8')
         length = len(data)
 
         # 将魔数写入管道
@@ -81,11 +83,13 @@ class Reporter:
     def _write_load_file(self, load_result: LoadResult) -> None:
         with open(os.path.join(self.report_path, 'result.json'), "wb") as f:
             logging.debug(f"Writing load results to {self.report_path}")
-            f.write(load_result.model_dump_json(by_alias=True, indent=2).encode('utf-8'))
+            data = json.dumps(dataclasses.asdict(load_result), indent=2, cls=DateTimeEncoder).encode('utf-8')
+            f.write(data)
 
     def _write_case_result(self, case_result: TestResult) -> None:
-        retry_id = case_result.test.attrs.get('retry', '0')
-        filename = hashlib.md5(f"{case_result.test.name}.{retry_id}".encode('utf-8')).hexdigest() + ".json"
+        retry_id = case_result.Test.Attributes.get('retry', '0')
+        filename = hashlib.md5(f"{case_result.Test.Name}.{retry_id}".encode('utf-8')).hexdigest() + ".json"
         with open(os.path.join(self.report_path, filename), "wb") as f:
             logging.debug(f"Writing case results to {self.report_path}")
-            f.write(case_result.model_dump_json(by_alias=True, indent=2).encode('utf-8'))
+            data = json.dumps(dataclasses.asdict(case_result), indent=2, cls=DateTimeEncoder).encode('utf-8')
+            f.write(data)

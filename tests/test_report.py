@@ -1,4 +1,5 @@
 import concurrent.futures
+import dataclasses
 import io
 import json
 import logging
@@ -7,6 +8,7 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import BinaryIO
 
+from src.testsolar_testtool_sdk.model.encoder import DateTimeEncoder
 from src.testsolar_testtool_sdk.model.load import LoadResult, LoadError
 from src.testsolar_testtool_sdk.model.test import TestCase
 from src.testsolar_testtool_sdk.model.testresult import ResultType, LogLevel
@@ -27,14 +29,14 @@ def generate_demo_load_result() -> LoadResult:
     r: LoadResult = LoadResult(Tests=[], LoadErrors=[])
 
     for x in range(40):
-        r.tests.append(
+        r.Tests.append(
             TestCase(
                 Name=f"mumu/mu.py/test_case_name_{x}_p1", Attributes={"tag": "P1"}
             )
         )
 
     for x in range(20):
-        r.load_errors.append(
+        r.LoadErrors.append(
             LoadError(
                 name=f"load error {x}",
                 message=f"""
@@ -155,7 +157,7 @@ def send_test_result(pipe_io: BinaryIO):
 
 def test_datetime_formatted():
     run_case_result = generate_test_result(0)
-    data = run_case_result.model_dump_json(by_alias=True, indent=2)
+    data = json.dumps(dataclasses.asdict(run_case_result), cls=DateTimeEncoder)
     tr = json.loads(data)
     assert tr['StartTime'].endswith("Z")
     assert tr['EndTime'].endswith("Z")
@@ -180,12 +182,12 @@ def test_report_run_case_result():
     # 检查管道中的数据，确保每个用例的魔数和数据长度还有数据正确
     pipe_io.seek(0)
     r1: TestResult = read_test_result(pipe_io)
-    assert r1.result_type == ResultType.SUCCEED
+    assert r1.ResultType == ResultType.SUCCEED
     r2 = read_test_result(pipe_io)
-    assert r2.result_type == ResultType.SUCCEED
+    assert r2.ResultType == ResultType.SUCCEED
     r3 = read_test_result(pipe_io)
-    assert r3.result_type == ResultType.SUCCEED
+    assert r3.ResultType == ResultType.SUCCEED
     r4 = read_test_result(pipe_io)
-    assert r4.result_type == ResultType.SUCCEED
+    assert r4.ResultType == ResultType.SUCCEED
     r5 = read_test_result(pipe_io)
-    assert r5.result_type == ResultType.SUCCEED
+    assert r5.ResultType == ResultType.SUCCEED

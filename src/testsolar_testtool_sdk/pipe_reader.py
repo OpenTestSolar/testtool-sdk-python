@@ -1,5 +1,8 @@
+import json
 import struct
 from typing import BinaryIO
+
+from dacite import from_dict, Config
 
 from .model.load import LoadResult
 from .model.testresult import TestResult
@@ -10,14 +13,18 @@ from .reporter import MAGIC_NUMBER
 def read_load_result(pipe_io: BinaryIO) -> LoadResult:
     result_data = _read_model(pipe_io)
 
-    re = LoadResult.model_validate_json(result_data)
+    data_dict: dict = json.loads(result_data)
+    re: LoadResult = from_dict(data_class=LoadResult, data=data_dict)
+
     return re
 
 
 # 从管道读取测试用例结果，仅供单元测试使用
 def read_test_result(pipe_io: BinaryIO) -> TestResult:
     result_data = _read_model(pipe_io)
-    re = TestResult.model_validate_json(result_data)
+
+    data_dict: dict = json.loads(result_data)
+    re: TestResult = from_dict(data_class=TestResult, data=data_dict, config=Config(check_types=False))
     return re
 
 
