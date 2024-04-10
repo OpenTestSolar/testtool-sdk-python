@@ -1,10 +1,8 @@
 import dataclasses
-import hashlib
 import json
 import logging
 import os
 import struct
-from enum import Enum
 from typing import Optional, BinaryIO
 
 import portalocker
@@ -20,44 +18,33 @@ MAGIC_NUMBER = 0x1234ABCD
 PIPE_WRITER = 3
 
 
-class ReportType(str, Enum):
-    Pipeline = 'pipeline'
-    File = 'file'
-
-
 class Reporter:
-    def __init__(self, reporter_type: ReportType, pipe_io: Optional[BinaryIO] = None, report_path: str = '') -> None:
+
+    def __enter__(self):
+        return self
+
+    def __init__(self, pipe_io: Optional[BinaryIO] = None) -> None:
         """
         初始化报告工具类
-        :param reporter_type: 报告类型，支持管道类型和文件类型
         :param pipe_io: 可选的管道，用于测试
-        :param report_path: 上报文件路径
         """
         self.lock_file = "/tmp/testsolar_reporter.lock"
-        self.reporter_type = reporter_type
-        if reporter_type == ReportType.Pipeline:
-            if pipe_io:
-                self.pipe_io = pipe_io
-            else:
-                self.pipe_io = os.fdopen(PIPE_WRITER, "wb")
-        elif reporter_type == ReportType.File:
-            if not report_path:
-                raise RuntimeError('report_path is required')
-            self.report_path = report_path
+
+        if pipe_io:
+            self.pipe_io = pipe_io
+        else:
+            self.pipe_io = os.fdopen(PIPE_WRITER, "wb")
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def report_load_result(self, load_result: LoadResult) -> None:
-        if self.reporter_type == ReportType.Pipeline:
-            with portalocker.Lock(self.lock_file, timeout=60):
-                self._send_json(dataclasses.asdict(load_result))
-        elif self.reporter_type == ReportType.File:
-            self._write_load_file(load_result)
+        with portalocker.Lock(self.lock_file, timeout=60):
+            self._send_json(dataclasses.asdict(load_result))
 
     def report_run_case_result(self, run_case_result: TestResult) -> None:
-        if self.reporter_type == ReportType.Pipeline:
-            with portalocker.Lock(self.lock_file, timeout=60):
-                self._send_json(dataclasses.asdict(run_case_result))
-        elif self.reporter_type == ReportType.File:
-            self._write_case_result(run_case_result)
+        with portalocker.Lock(self.lock_file, timeout=60):
+            self._send_json(dataclasses.asdict(run_case_result))
 
     def close(self) -> None:
         if self.pipe_io:
@@ -79,17 +66,3 @@ class Reporter:
         logging.debug(f"Sending {length} bytes to pipe {PIPE_WRITER}")
 
         self.pipe_io.flush()
-
-    def _write_load_file(self, load_result: LoadResult) -> None:
-        with open(os.path.join(self.report_path, 'result.json'), "wb") as f:
-            logging.debug(f"Writing load results to {self.report_path}")
-            data = json.dumps(dataclasses.asdict(load_result), indent=2, cls=DateTimeEncoder).encode('utf-8')
-            f.write(data)
-
-    def _write_case_result(self, case_result: TestResult) -> None:
-        retry_id = case_result.Test.Attributes.get('retry', '0')
-        filename = hashlib.md5(f"{case_result.Test.Name}.{retry_id}".encode('utf-8')).hexdigest() + ".json"
-        with open(os.path.join(self.report_path, filename), "wb") as f:
-            logging.debug(f"Writing case results to {self.report_path}")
-            data = json.dumps(dataclasses.asdict(case_result), indent=2, cls=DateTimeEncoder).encode('utf-8')
-            f.write(data)
