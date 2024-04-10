@@ -72,6 +72,7 @@ class TestCaseStep:
 
     StartTime: datetime
     Title: str
+    ResultType: ResultType
     EndTime: Optional[datetime] = None
     Logs: List[TestCaseLog] = field(default_factory=list)
 

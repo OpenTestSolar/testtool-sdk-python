@@ -97,6 +97,7 @@ def generate_testcase_step(index: str) -> TestCaseStep:
         EndTime=datetime.utcnow(),
         Title=get_random_unicode(100),
         Logs=[generate_testcase_log(f"{index}_{x}") for x in range(100)],
+        ResultType=ResultType.SUCCEED
     )
 
 
