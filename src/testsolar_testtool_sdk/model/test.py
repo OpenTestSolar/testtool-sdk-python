@@ -1,10 +1,11 @@
 from typing import Dict
 
-from pydantic import BaseModel, Field
+from dataclasses import dataclass, field
 
 
-class TestCase(BaseModel):
+@dataclass(frozen=True)
+class TestCase:
     __test__ = False
 
-    name: str = Field(alias="Name")
-    attrs: Dict[str, str] = Field(alias="Attributes")
+    Name: str
+    Attributes: Dict[str, str] = field(default_factory=dict)

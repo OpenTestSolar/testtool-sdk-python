@@ -1,8 +1,7 @@
+from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional
-from datetime import datetime
-
-from pydantic import BaseModel, Field
 
 from .test import TestCase
 
@@ -31,72 +30,59 @@ class AttachmentType(str, Enum):
     IFRAME = "IFRAME"
 
 
-class TestCaseAssertError(BaseModel):
+@dataclass(frozen=True)
+class TestCaseAssertError:
     __test__ = False
 
-    expect: str = Field(alias="Expect")
-    actual: str = Field(alias="Actual")
-    message: str = Field(alias="Message")
+    Expect: str
+    Actual: str
+    Message: str
 
 
-class TestCaseRuntimeError(BaseModel):
+@dataclass(frozen=True)
+class TestCaseRuntimeError:
     __test__ = False
 
-    summary: str = Field(alias="Summary")
-    detail: str = Field(alias="Detail")
+    Summary: str
+    Detail: str
 
 
-class Attachment(BaseModel):
-    name: str = Field(alias="Name")
-    url: str = Field(alias="Url")
-    type: AttachmentType = Field(alias="AttachmentType")
+@dataclass(frozen=True)
+class Attachment:
+    Name: str
+    Url: str
+    AttachmentType: AttachmentType
 
 
-class TestCaseLog(BaseModel):
+@dataclass
+class TestCaseLog:
     __test__ = False
 
-    time: datetime = Field(alias="Time")
-    level: LogLevel = Field(alias="Level")
-    content: str = Field(alias="Content")
-    attachments: List[Attachment] = Field(alias="Attachments")
-    assert_error: TestCaseAssertError = Field(alias="AssertError")
-    runtime_error: Optional[TestCaseRuntimeError] = Field(None, alias="RuntimeError")
-
-    class Config:
-        json_encoders = {
-            datetime: lambda dt: _format_datetime(dt),
-        }
+    Time: datetime
+    Level: LogLevel
+    Content: str
+    AssertError: Optional[TestCaseAssertError] = None
+    RuntimeError: Optional[TestCaseRuntimeError] = None
+    Attachments: List[Attachment] = field(default_factory=list)
 
 
-class TestCaseStep(BaseModel):
+@dataclass
+class TestCaseStep:
     __test__ = False
 
-    start_time: datetime = Field(alias="StartTime")
-    end_time: Optional[datetime] = Field(alias="EndTime")
-    title: str = Field(alias="Title")
-    logs: List[TestCaseLog] = Field(alias="Logs")
-
-    class Config:
-        json_encoders = {
-            datetime: lambda dt: _format_datetime(dt),
-        }
+    StartTime: datetime
+    Title: str
+    EndTime: Optional[datetime] = None
+    Logs: List[TestCaseLog] = field(default_factory=list)
 
 
-def _format_datetime(t: datetime) -> str:
-    return t.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-
-
-class TestResult(BaseModel):
+@dataclass
+class TestResult:
     __test__ = False
 
-    test: TestCase = Field(alias="Test")
-    start_time: datetime = Field(alias="StartTime")
-    end_time: Optional[datetime] = Field(alias="EndTime")
-    result_type: ResultType = Field(alias="ResultType")
-    message: str = Field(alias="Message")
-    steps: List[TestCaseStep] = Field(alias="Steps")
-
-    class Config:
-        json_encoders = {
-            datetime: lambda dt: _format_datetime(dt),
-        }
+    Test: TestCase
+    StartTime: datetime
+    ResultType: ResultType
+    Message: str
+    EndTime: Optional[datetime] = None
+    Steps: List[TestCaseStep] = field(default_factory=list)
