@@ -42,9 +42,9 @@ class Reporter:
         with portalocker.Lock(self.lock_file, timeout=60):
             self._send_json(dataclasses.asdict(load_result))
 
-    def report_run_case_result(self, run_case_result: TestResult) -> None:
+    def report_case_result(self, case_result: TestResult) -> None:
         with portalocker.Lock(self.lock_file, timeout=60):
-            self._send_json(dataclasses.asdict(run_case_result))
+            self._send_json(dataclasses.asdict(case_result))
 
     def close(self) -> None:
         if self.pipe_io:
