@@ -24,15 +24,15 @@ def read_test_result(pipe_io: BinaryIO) -> TestResult:
     result_data = _read_model(pipe_io)
 
     data_dict: dict = json.loads(result_data)
-    re: TestResult = from_dict(data_class=TestResult, data=data_dict, config=Config(check_types=False))
+    re: TestResult = from_dict(
+        data_class=TestResult, data=data_dict, config=Config(check_types=False)
+    )
     return re
 
 
 def _read_model(pipe_io: BinaryIO) -> str:
     magic_number = struct.unpack("<I", pipe_io.read(4))[0]
-    assert (
-            magic_number == MAGIC_NUMBER
-    ), f"Magic number does not match ${MAGIC_NUMBER}"
+    assert magic_number == MAGIC_NUMBER, f"Magic number does not match ${MAGIC_NUMBER}"
 
     length = struct.unpack("<I", pipe_io.read(4))[0]
 

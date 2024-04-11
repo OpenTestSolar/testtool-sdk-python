@@ -87,3 +87,12 @@ class TestResult:
     Message: str
     EndTime: Optional[datetime] = None
     Steps: List[TestCaseStep] = field(default_factory=list)
+
+    def is_final(self) -> bool:
+        return self.ResultType in [
+            ResultType.SUCCEED,
+            ResultType.FAILED,
+            ResultType.IGNORED,
+            ResultType.LOAD_FAILED,
+            ResultType.UNKNOWN,
+        ]

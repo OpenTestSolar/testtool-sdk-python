@@ -3,7 +3,7 @@ from typing import Dict
 from dataclasses import dataclass, field
 
 
-@dataclass(frozen=True)
+@dataclass
 class TestCase:
     __test__ = False
 

@@ -19,7 +19,6 @@ PIPE_WRITER = 3
 
 
 class Reporter:
-
     def __enter__(self):
         return self
 
@@ -51,7 +50,7 @@ class Reporter:
             self.pipe_io.close()
 
     def _send_json(self, result: dict) -> None:
-        data = json.dumps(result, cls=DateTimeEncoder).encode('utf-8')
+        data = json.dumps(result, cls=DateTimeEncoder).encode("utf-8")
         length = len(data)
 
         # 将魔数写入管道
