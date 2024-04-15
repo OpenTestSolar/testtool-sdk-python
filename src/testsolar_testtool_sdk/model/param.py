@@ -3,7 +3,7 @@ from typing import Dict, List
 from dataclasses import dataclass, field
 
 
-@dataclass(frozen=True)
+@dataclass
 class EntryParam:
     TaskId: str
     ProjectPath: str
