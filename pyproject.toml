@@ -5,9 +5,7 @@ description = "Python3 SDK for TestSolar testtool"
 authors = [
     { name = "asiazhang", email = "asiazhang2002@gmail.com" },
 ]
-urls = [
-    "https://github.com/OpenTestSolar/testtool-sdk-python"
-]
+urls = { repository = "https://github.com/OpenTestSolar/testtool-sdk-python" }
 classifiers = [
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
@@ -29,6 +27,7 @@ license = { text = "Apache License 2.0" }
 keywords = [
     'testsolar'
 ]
+
 
 
 [tool.pdm.dev-dependencies]
