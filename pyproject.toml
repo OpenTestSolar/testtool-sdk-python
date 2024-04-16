@@ -1,9 +1,23 @@
 [project]
 name = "testsolar-testtool-sdk"
 version = "0.1.9"
-description = "TestSolar测试工具SDK"
+description = "Python3 SDK for TestSolar testtool"
 authors = [
-    {name = "asiazhang", email = "asiazhang2002@gmail.com"},
+    { name = "asiazhang", email = "asiazhang2002@gmail.com" },
+]
+urls = [
+    "https://github.com/OpenTestSolar/testtool-sdk-python"
+]
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Developers',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
 ]
 dependencies = [
     "portalocker>=2.8.2",
@@ -11,7 +25,12 @@ dependencies = [
 ]
 requires-python = ">=3.8"
 readme = "README.md"
-license = {text = "MIT"}
+license = { text = "Apache License 2.0" }
+keywords = [
+    'testsolar'
+]
+
+
 [tool.pdm.dev-dependencies]
 dev = [
     "setuptools==67.8.0",

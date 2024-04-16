@@ -171,7 +171,7 @@ def test_report_run_case_result():
     pipe_io = io.BytesIO()
     with Reporter(pipe_io=pipe_io) as reporter:
         # 创建五个LoadResult实例并发调用report_run_case_result方法
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             send_action = partial(send_test_result, reporter)
             for i in range(5):
                 executor.submit(send_action)
