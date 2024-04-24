@@ -33,7 +33,7 @@ jobs:
           pdm run ruff check src
       - name: Check with mypy
         run: |
-          pdm run mypy src
+          pdm run mypy src --strict
       - name: Test with pytest
         run: |
           pdm run pytest --durations=5 --cov=. --cov-report term -vv

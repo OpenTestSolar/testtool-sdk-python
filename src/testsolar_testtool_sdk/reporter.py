@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import struct
-from typing import Optional, BinaryIO
+from typing import Optional, BinaryIO, Any, Dict
 
 import portalocker
 
@@ -19,7 +19,7 @@ PIPE_WRITER = 3
 
 
 class Reporter:
-    def __enter__(self):
+    def __enter__(self) -> 'Reporter':
         return self
 
     def __init__(self, pipe_io: Optional[BinaryIO] = None) -> None:
@@ -34,7 +34,7 @@ class Reporter:
         else:
             self.pipe_io = os.fdopen(PIPE_WRITER, "wb")
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.close()
 
     def report_load_result(self, load_result: LoadResult) -> None:
@@ -49,7 +49,7 @@ class Reporter:
         if self.pipe_io:
             self.pipe_io.close()
 
-    def _send_json(self, result: dict) -> None:
+    def _send_json(self, result: Dict[Any, Any]) -> None:
         data = json.dumps(result, cls=DateTimeEncoder).encode("utf-8")
         length = len(data)
 

@@ -5,7 +5,7 @@ from typing import Any
 
 
 class DateTimeEncoder(json.JSONEncoder):
-    def default(self, obj) -> Any:
+    def default(self, obj: Any) -> Any:
         if isinstance(obj, datetime):
             return _format_datetime(obj)
         else:
