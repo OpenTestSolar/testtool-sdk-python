@@ -1,6 +1,6 @@
 import json
 import struct
-from typing import BinaryIO
+from typing import BinaryIO, Dict, Any
 
 from dacite import from_dict, Config
 
@@ -13,7 +13,7 @@ from .reporter import MAGIC_NUMBER
 def read_load_result(pipe_io: BinaryIO) -> LoadResult:
     result_data = _read_model(pipe_io)
 
-    data_dict: dict = json.loads(result_data)
+    data_dict: Dict[Any, Any] = json.loads(result_data)
     re: LoadResult = from_dict(data_class=LoadResult, data=data_dict)
 
     return re
@@ -23,7 +23,7 @@ def read_load_result(pipe_io: BinaryIO) -> LoadResult:
 def read_test_result(pipe_io: BinaryIO) -> TestResult:
     result_data = _read_model(pipe_io)
 
-    data_dict: dict = json.loads(result_data)
+    data_dict: Dict[Any, Any] = json.loads(result_data)
     re: TestResult = from_dict(
         data_class=TestResult, data=data_dict, config=Config(check_types=False)
     )
