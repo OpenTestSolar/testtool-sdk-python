@@ -1,6 +1,6 @@
 [project]
 name = "testsolar-testtool-sdk"
-version = "0.2.0"
+version = "0.2.1"
 description = "Python3 SDK for TestSolar testtool"
 authors = [
     { name = "asiazhang", email = "asiazhang2002@gmail.com" },
@@ -36,3 +36,6 @@ dev = [
     "ruff>=0.3.5",
     "mypy>=1",
 ]
+
+[tool.setuptools.package-data]
+"testsolar_testtool_sdk" = ["py.typed"]
