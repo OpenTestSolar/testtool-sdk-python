@@ -25,7 +25,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          pdm install -d
+          pdm sync -d -G dev
       - name: Lint with ruff
         run: |
           pdm run ruff check src
@@ -34,4 +34,4 @@ jobs:
           pdm run mypy src --strict
       - name: Test with pytest
         run: |
-          pdm run pytest --durations=5 --cov=. --cov-report term -vv
+          pytest --durations=5 --cov=. --cov-report --cov-fail-under=90 term -vv

@@ -1,16 +1,17 @@
 [project]
 name = "testsolar-testtool-sdk"
-version = "0.1.9"
+version = "0.1.10"
 description = "Python3 SDK for TestSolar testtool"
 authors = [
     { name = "asiazhang", email = "asiazhang2002@gmail.com" },
 ]
 urls = { repository = "https://github.com/OpenTestSolar/testtool-sdk-python" }
 classifiers = [
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
@@ -18,10 +19,10 @@ classifiers = [
     'Programming Language :: Python :: 3.12',
 ]
 dependencies = [
-    "portalocker>=2.8.2",
+    "portalocker>=2.7",
     "dacite>=1.8.1",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.7"
 readme = "README.md"
 license = { text = "Apache License 2.0" }
 keywords = [
