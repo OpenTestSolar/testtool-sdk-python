@@ -1,6 +1,6 @@
 [project]
 name = "testsolar-testtool-sdk"
-version = "0.1.10"
+version = "0.2.0"
 description = "Python3 SDK for TestSolar testtool"
 authors = [
     { name = "asiazhang", email = "asiazhang2002@gmail.com" },
@@ -28,8 +28,6 @@ license = { text = "Apache License 2.0" }
 keywords = [
     'testsolar'
 ]
-
-
 
 [tool.pdm.dev-dependencies]
 dev = [
