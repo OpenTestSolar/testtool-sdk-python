@@ -11,3 +11,4 @@ class EntryParam:
     Collectors: List[str] = field(default_factory=list)
     Context: Dict[str, str] = field(default_factory=dict)
     TestSelectors: List[str] = field(default_factory=list)
+    ScanDescFields: List[str] = field(default_factory=list)
