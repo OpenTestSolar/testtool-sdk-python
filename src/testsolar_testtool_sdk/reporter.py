@@ -34,6 +34,8 @@ class Reporter:
         else:
             self.pipe_io = os.fdopen(PIPE_WRITER, "wb")
 
+        logging.debug(f"Reporter initialized with pipe_io: {self.pipe_io}")
+
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.close()
 
@@ -47,7 +49,9 @@ class Reporter:
 
     def close(self) -> None:
         if self.pipe_io:
+            logging.debug("Closing pipe_io")
             self.pipe_io.close()
+            self.pipe_io = None
 
     def _send_json(self, result: Dict[Any, Any]) -> None:
         data = json.dumps(result, cls=DateTimeEncoder).encode("utf-8")
