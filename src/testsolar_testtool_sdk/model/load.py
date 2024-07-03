@@ -15,3 +15,7 @@ class LoadError:
 class LoadResult:
     Tests: List[TestCase] = field(default_factory=list)
     LoadErrors: List[LoadError] = field(default_factory=list)
+
+    def merge(self, data: 'LoadResult') -> None:
+        self.Tests.extend(data.Tests)
+        self.LoadErrors.extend(data.LoadErrors)
