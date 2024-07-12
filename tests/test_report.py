@@ -176,10 +176,12 @@ def send_test_result(reporter: BaseReporter, index=0):
 
 def test_load_result_merge():
     load_data = generate_demo_load_result()
-    load_data.merge(LoadResult(
-        Tests=[TestCase(Name="hello.py?fast_input")],
-        LoadErrors=[LoadError(name="a", message="b")]
-    ))
+    load_data.merge(
+        LoadResult(
+            Tests=[TestCase(Name="hello.py?fast_input")],
+            LoadErrors=[LoadError(name="a", message="b")],
+        )
+    )
 
     assert len(load_data.Tests) == 41
     assert len(load_data.LoadErrors) == 21

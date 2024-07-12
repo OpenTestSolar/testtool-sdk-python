@@ -23,12 +23,10 @@ PIPE_WRITER = 3
 
 class BaseReporter(ABC):
     @abstractmethod
-    def report_load_result(self, load_result: LoadResult) -> None:
-        ...
+    def report_load_result(self, load_result: LoadResult) -> None: ...
 
     @abstractmethod
-    def report_case_result(self, case_result: TestResult) -> None:
-        ...
+    def report_case_result(self, case_result: TestResult) -> None: ...
 
 
 class Reporter(BaseReporter):
@@ -83,17 +81,20 @@ class FileReporter(BaseReporter):
         logging.debug(f"Writing load results to {out_file}")
         with open(out_file, "wb") as f:
             data = json.dumps(
-                dataclasses.asdict(load_result), indent=2, ensure_ascii=False, cls=DateTimeEncoder
+                dataclasses.asdict(load_result),
+                indent=2,
+                ensure_ascii=False,
+                cls=DateTimeEncoder,
             ).encode("utf-8")
             f.write(data)
 
     def report_case_result(self, case_result: TestResult) -> None:
         retry_id = case_result.Test.Attributes.get("retry", "0")
         filename = (
-                hashlib.md5(
-                    f"{case_result.Test.Name}.{retry_id}".encode("utf-8")
-                ).hexdigest()
-                + ".json"
+            hashlib.md5(
+                f"{case_result.Test.Name}.{retry_id}".encode("utf-8")
+            ).hexdigest()
+            + ".json"
         )
         out_file = self.report_path.joinpath(filename)
 
@@ -103,6 +104,9 @@ class FileReporter(BaseReporter):
 
         with open(out_file, "wb") as f:
             data = json.dumps(
-                dataclasses.asdict(case_result), indent=2, ensure_ascii=False, cls=DateTimeEncoder
+                dataclasses.asdict(case_result),
+                indent=2,
+                ensure_ascii=False,
+                cls=DateTimeEncoder,
             ).encode("utf-8")
             f.write(data)
