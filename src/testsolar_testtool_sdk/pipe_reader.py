@@ -13,9 +13,13 @@ from .reporter import MAGIC_NUMBER
 def read_load_result(pipe_io: BinaryIO) -> LoadResult:
     result_data = _read_model(pipe_io)
 
-    data_dict: Dict[Any, Any] = json.loads(result_data)
-    re: LoadResult = from_dict(data_class=LoadResult, data=data_dict)
+    data_dict: Dict[str, Any] = json.loads(result_data)
 
+    return deserialize_load_result(data_dict)
+
+
+def deserialize_load_result(data_dict: Dict[str, Any]) -> LoadResult:
+    re: LoadResult = from_dict(data_class=LoadResult, data=data_dict)
     return re
 
 
@@ -23,7 +27,11 @@ def read_load_result(pipe_io: BinaryIO) -> LoadResult:
 def read_test_result(pipe_io: BinaryIO) -> TestResult:
     result_data = _read_model(pipe_io)
 
-    data_dict: Dict[Any, Any] = json.loads(result_data)
+    data_dict: Dict[str, Any] = json.loads(result_data)
+    return deserialize_test_result(data_dict)
+
+
+def deserialize_test_result(data_dict: Dict[str, Any]) -> TestResult:
     re: TestResult = from_dict(
         data_class=TestResult, data=data_dict, config=Config(check_types=False)
     )

@@ -1,10 +1,12 @@
 import dataclasses
+import hashlib
 import json
 import logging
 import os
 import struct
 from pathlib import Path
 from typing import Optional, BinaryIO, Any, Dict
+from abc import ABC, abstractmethod
 
 import portalocker
 
@@ -19,7 +21,15 @@ MAGIC_NUMBER = 0x1234ABCD
 PIPE_WRITER = 3
 
 
-class Reporter:
+class BaseReporter(ABC):
+    @abstractmethod
+    def report_load_result(self, load_result: LoadResult) -> None: ...
+
+    @abstractmethod
+    def report_case_result(self, case_result: TestResult) -> None: ...
+
+
+class Reporter(BaseReporter):
     def __init__(self, pipe_io: Optional[BinaryIO] = None) -> None:
         """
         初始化报告工具类
@@ -57,3 +67,46 @@ class Reporter:
         logging.debug(f"Sending {length} bytes to pipe {PIPE_WRITER}")
 
         self.pipe_io.flush()
+
+
+PipeReporter = Reporter
+
+
+class FileReporter(BaseReporter):
+    def __init__(self, report_path: Path) -> None:
+        self.report_path: Path = report_path
+
+    def report_load_result(self, load_result: LoadResult) -> None:
+        out_file = self.report_path.joinpath("result.json")
+        logging.debug(f"Writing load results to {out_file}")
+        with open(out_file, "wb") as f:
+            data = json.dumps(
+                dataclasses.asdict(load_result),
+                indent=2,
+                ensure_ascii=False,
+                cls=DateTimeEncoder,
+            ).encode("utf-8")
+            f.write(data)
+
+    def report_case_result(self, case_result: TestResult) -> None:
+        retry_id = case_result.Test.Attributes.get("retry", "0")
+        filename = (
+            hashlib.md5(
+                f"{case_result.Test.Name}.{retry_id}".encode("utf-8")
+            ).hexdigest()
+            + ".json"
+        )
+        out_file = self.report_path.joinpath(filename)
+
+        logging.debug(
+            f"Writing case [{case_result.Test.Name}.{retry_id}] results to {out_file}"
+        )
+
+        with open(out_file, "wb") as f:
+            data = json.dumps(
+                dataclasses.asdict(case_result),
+                indent=2,
+                ensure_ascii=False,
+                cls=DateTimeEncoder,
+            ).encode("utf-8")
+            f.write(data)
