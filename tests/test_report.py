@@ -2,10 +2,12 @@ import concurrent.futures
 import dataclasses
 import io
 import json
-import logging
+import os
 import random
+import tempfile
 from datetime import datetime, timedelta
 from functools import partial
+from pathlib import Path
 
 from src.testsolar_testtool_sdk.model.encoder import DateTimeEncoder
 from src.testsolar_testtool_sdk.model.load import LoadResult, LoadError
@@ -17,11 +19,13 @@ from src.testsolar_testtool_sdk.model.testresult import (
     TestCaseAssertError,
     TestCaseLog,
 )
-from src.testsolar_testtool_sdk.pipe_reader import read_load_result, read_test_result
-from src.testsolar_testtool_sdk.reporter import Reporter
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+from src.testsolar_testtool_sdk.pipe_reader import (
+    read_load_result,
+    read_test_result,
+    deserialize_test_result,
+    deserialize_load_result,
+)
+from src.testsolar_testtool_sdk.reporter import BaseReporter, FileReporter, PipeReporter
 
 
 def generate_demo_load_result() -> LoadResult:
@@ -127,10 +131,10 @@ def get_random_unicode(length) -> str:
     return "".join(random.choice(alphabet) for i in range(length))
 
 
-def test_report_load_result() -> None:
+def test_report_load_result_with_pipe() -> None:
     # 创建一个Reporter实例
     pipe_io = io.BytesIO()
-    reporter = Reporter(pipe_io=pipe_io)
+    reporter = PipeReporter(pipe_io=pipe_io)
     # 创建一个LoadResult实例
     load_result = generate_demo_load_result()
 
@@ -144,11 +148,41 @@ def test_report_load_result() -> None:
     assert loaded == load_result
 
 
-def send_test_result(reporter: Reporter):
+def test_report_load_result_with_file() -> None:
+    # 创建一个Reporter实例
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        reporter = FileReporter(Path(tmpdir))
+        # 创建一个LoadResult实例
+        load_result = generate_demo_load_result()
+
+        # 调用report_load_result方法
+        reporter.report_load_result(load_result)
+
+        # 检查管道中的魔数
+        with open(Path(tmpdir).joinpath("result.json")) as f:
+            raw = json.load(f)
+
+            loaded = deserialize_load_result(raw)
+            assert loaded == load_result
+
+
+def send_test_result(reporter: BaseReporter, index=0):
     test_results = []
-    run_case_result = generate_test_result(0)
+    run_case_result = generate_test_result(index)
     test_results.append(run_case_result)
     reporter.report_case_result(run_case_result)
+
+
+def test_load_result_merge():
+    load_data = generate_demo_load_result()
+    load_data.merge(LoadResult(
+        Tests=[TestCase(Name="hello.py?fast_input")],
+        LoadErrors=[LoadError(name="a", message="b")]
+    ))
+
+    assert len(load_data.Tests) == 41
+    assert len(load_data.LoadErrors) == 21
 
 
 def test_datetime_formatted():
@@ -164,10 +198,10 @@ def test_datetime_formatted():
     assert tr["Steps"][0]["Logs"][0]["Time"].endswith("Z")
 
 
-def test_report_run_case_result():
+def test_report_run_case_result_with_pipe():
     # 创建一个Reporter实例
     pipe_io = io.BytesIO()
-    reporter = Reporter(pipe_io=pipe_io)
+    reporter = PipeReporter(pipe_io=pipe_io)
     # 创建五个LoadResult实例并发调用report_run_case_result方法
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
         send_action = partial(send_test_result, reporter)
@@ -186,3 +220,25 @@ def test_report_run_case_result():
     assert r4.ResultType == ResultType.SUCCEED
     r5 = read_test_result(pipe_io)
     assert r5.ResultType == ResultType.SUCCEED
+
+
+def test_report_run_case_result_with_file():
+    # 创建一个Reporter实例
+    with tempfile.TemporaryDirectory() as tmpdir:
+        reporter = FileReporter(report_path=Path(tmpdir))
+        # 创建五个LoadResult实例并发调用report_run_case_result方法
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            send_action = partial(send_test_result, reporter)
+            for i in range(5):
+                executor.submit(send_action, i)
+
+        # 检查报告目录中应该存在多个报告文件
+        for dirpath, _, filenames in os.walk(tmpdir):
+            assert len(filenames) == 5
+
+            for filename in filenames:
+                with open(Path(dirpath).joinpath(filename), "rb") as f:
+                    data = json.load(f)
+                    tr = deserialize_test_result(data)
+
+                    assert tr.ResultType == ResultType.SUCCEED

@@ -6,6 +6,7 @@ import os
 import struct
 from pathlib import Path
 from typing import Optional, BinaryIO, Any, Dict
+from abc import ABC, abstractmethod
 
 import portalocker
 
@@ -20,7 +21,17 @@ MAGIC_NUMBER = 0x1234ABCD
 PIPE_WRITER = 3
 
 
-class Reporter:
+class BaseReporter(ABC):
+    @abstractmethod
+    def report_load_result(self, load_result: LoadResult) -> None:
+        ...
+
+    @abstractmethod
+    def report_case_result(self, case_result: TestResult) -> None:
+        ...
+
+
+class Reporter(BaseReporter):
     def __init__(self, pipe_io: Optional[BinaryIO] = None) -> None:
         """
         初始化报告工具类
@@ -63,26 +74,26 @@ class Reporter:
 PipeReporter = Reporter
 
 
-class FileReporter:
-    def __init__(self, file_path: Path) -> None:
-        self.report_path: Path = file_path
+class FileReporter(BaseReporter):
+    def __init__(self, report_path: Path) -> None:
+        self.report_path: Path = report_path
 
-    def _write_load_file(self, load_result: LoadResult) -> None:
+    def report_load_result(self, load_result: LoadResult) -> None:
         out_file = self.report_path.joinpath("result.json")
         logging.debug(f"Writing load results to {out_file}")
         with open(out_file, "wb") as f:
             data = json.dumps(
-                dataclasses.asdict(load_result), indent=2, cls=DateTimeEncoder
+                dataclasses.asdict(load_result), indent=2, ensure_ascii=False, cls=DateTimeEncoder
             ).encode("utf-8")
             f.write(data)
 
-    def _write_case_result(self, case_result: TestResult) -> None:
+    def report_case_result(self, case_result: TestResult) -> None:
         retry_id = case_result.Test.Attributes.get("retry", "0")
         filename = (
-            hashlib.md5(
-                f"{case_result.Test.Name}.{retry_id}".encode("utf-8")
-            ).hexdigest()
-            + ".json"
+                hashlib.md5(
+                    f"{case_result.Test.Name}.{retry_id}".encode("utf-8")
+                ).hexdigest()
+                + ".json"
         )
         out_file = self.report_path.joinpath(filename)
 
@@ -92,6 +103,6 @@ class FileReporter:
 
         with open(out_file, "wb") as f:
             data = json.dumps(
-                dataclasses.asdict(case_result), indent=2, cls=DateTimeEncoder
+                dataclasses.asdict(case_result), indent=2, ensure_ascii=False, cls=DateTimeEncoder
             ).encode("utf-8")
             f.write(data)
