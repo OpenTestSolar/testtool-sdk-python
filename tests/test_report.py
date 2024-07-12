@@ -29,16 +29,14 @@ def generate_demo_load_result() -> LoadResult:
 
     for x in range(40):
         r.Tests.append(
-            TestCase(
-                Name=f"mumu/mu.py/test_case_name_{x}_p1", Attributes={"tag": "P1"}
-            )
+            TestCase(Name=f"mumu/mu.py/test_case_name_{x}_p1", Attributes={"tag": "P1"})
         )
 
     for x in range(20):
         r.LoadErrors.append(
             LoadError(
                 name=f"load error {x}",
-                message=f"""
+                message="""
 文件读取失败。可能的原因包括：文件不存在、文件损坏、
 不正确的编码方式或其他未知错误。请检查文件路径和内容的正确性，
 确保文件具有正确的编码格式。如果问题仍然存在，可能需要尝试其他解决方法
@@ -97,7 +95,7 @@ def generate_testcase_step(index: str) -> TestCaseStep:
         EndTime=datetime.utcnow(),
         Title=get_random_unicode(100),
         Logs=[generate_testcase_log(f"{index}_{x}") for x in range(100)],
-        ResultType=ResultType.SUCCEED
+        ResultType=ResultType.SUCCEED,
     )
 
 
@@ -157,13 +155,13 @@ def test_datetime_formatted():
     run_case_result = generate_test_result(0)
     data = json.dumps(dataclasses.asdict(run_case_result), cls=DateTimeEncoder)
     tr = json.loads(data)
-    assert tr['StartTime'].endswith("Z")
-    assert tr['EndTime'].endswith("Z")
+    assert tr["StartTime"].endswith("Z")
+    assert tr["EndTime"].endswith("Z")
 
-    assert tr['Steps'][0]['StartTime'].endswith("Z")
-    assert tr['Steps'][0]['EndTime'].endswith("Z")
+    assert tr["Steps"][0]["StartTime"].endswith("Z")
+    assert tr["Steps"][0]["EndTime"].endswith("Z")
 
-    assert tr['Steps'][0]['Logs'][0]['Time'].endswith("Z")
+    assert tr["Steps"][0]["Logs"][0]["Time"].endswith("Z")
 
 
 def test_report_run_case_result():
