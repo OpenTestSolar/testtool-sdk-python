@@ -13,6 +13,7 @@ import portalocker
 from .model.encoder import DateTimeEncoder
 from .model.load import LoadResult
 from .model.testresult import TestResult
+from .model.test import TestCase
 
 # 跟TestSolar uniSDK约定的管道上报魔数，避免乱序导致后续数据全部无法上报
 MAGIC_NUMBER = 0x1234ABCD
@@ -71,13 +72,15 @@ class Reporter(BaseReporter):
 
 PipeReporter = Reporter
 
+LOAD_RESULT_FILE_NAME = "result.json"
+
 
 class FileReporter(BaseReporter):
     def __init__(self, report_path: Path) -> None:
         self.report_path: Path = report_path
 
     def report_load_result(self, load_result: LoadResult) -> None:
-        out_file = self.report_path.joinpath("result.json")
+        out_file = self.report_path.joinpath(LOAD_RESULT_FILE_NAME)
         logging.debug(f"Writing load results to {out_file}")
         with open(out_file, "wb") as f:
             data = json.dumps(
@@ -90,12 +93,7 @@ class FileReporter(BaseReporter):
 
     def report_case_result(self, case_result: TestResult) -> None:
         retry_id = case_result.Test.Attributes.get("retry", "0")
-        filename = (
-            hashlib.md5(
-                f"{case_result.Test.Name}.{retry_id}".encode("utf-8")
-            ).hexdigest()
-            + ".json"
-        )
+        filename = digest_file_name(case_result.Test)
         out_file = self.report_path.joinpath(filename)
 
         logging.debug(
@@ -110,3 +108,11 @@ class FileReporter(BaseReporter):
                 cls=DateTimeEncoder,
             ).encode("utf-8")
             f.write(data)
+
+
+def digest_file_name(case: TestCase) -> str:
+    retry_id = case.Attributes.get("retry", "0")
+    filename = (
+        hashlib.md5(f"{case.Name}.{retry_id}".encode("utf-8")).hexdigest() + ".json"
+    )
+    return filename

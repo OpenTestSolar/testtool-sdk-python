@@ -2,10 +2,8 @@ import json
 import struct
 from typing import BinaryIO, Dict, Any
 
-from dacite import from_dict, Config
-
-from .model.load import LoadResult
-from .model.testresult import TestResult
+from .model.load import LoadResult, deserialize_load_result
+from .model.testresult import TestResult, deserialize_test_result
 from .reporter import MAGIC_NUMBER
 
 
@@ -18,24 +16,12 @@ def read_load_result(pipe_io: BinaryIO) -> LoadResult:
     return deserialize_load_result(data_dict)
 
 
-def deserialize_load_result(data_dict: Dict[str, Any]) -> LoadResult:
-    re: LoadResult = from_dict(data_class=LoadResult, data=data_dict)
-    return re
-
-
 # 从管道读取测试用例结果，仅供单元测试使用
 def read_test_result(pipe_io: BinaryIO) -> TestResult:
     result_data = _read_model(pipe_io)
 
     data_dict: Dict[str, Any] = json.loads(result_data)
     return deserialize_test_result(data_dict)
-
-
-def deserialize_test_result(data_dict: Dict[str, Any]) -> TestResult:
-    re: TestResult = from_dict(
-        data_class=TestResult, data=data_dict, config=Config(check_types=False)
-    )
-    return re
 
 
 def _read_model(pipe_io: BinaryIO) -> str:

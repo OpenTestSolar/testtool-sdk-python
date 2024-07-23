@@ -1,6 +1,6 @@
 [project]
 name = "testsolar-testtool-sdk"
-version = "0.4.0"
+version = "0.4.1"
 description = "Python3 SDK for TestSolar testtool"
 authors = [
     { name = "asiazhang", email = "asiazhang2002@gmail.com" },
