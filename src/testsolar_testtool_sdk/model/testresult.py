@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
+from dacite import from_dict, Config
 from .test import TestCase
 
 
@@ -96,3 +97,10 @@ class TestResult:
             ResultType.LOAD_FAILED,
             ResultType.UNKNOWN,
         ]
+
+
+def deserialize_test_result(data_dict: Dict[str, Any]) -> TestResult:
+    re: TestResult = from_dict(
+        data_class=TestResult, data=data_dict, config=Config(check_types=False)
+    )
+    return re
