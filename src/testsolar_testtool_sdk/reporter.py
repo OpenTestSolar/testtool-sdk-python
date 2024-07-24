@@ -80,7 +80,7 @@ class FileReporter(BaseReporter):
         self.report_path: Path = report_path
 
     def report_load_result(self, load_result: LoadResult) -> None:
-        out_file = self.report_path.joinpath(LOAD_RESULT_FILE_NAME)
+        out_file = self.report_path
         logging.debug(f"Writing load results to {out_file}")
         with open(out_file, "wb") as f:
             data = json.dumps(

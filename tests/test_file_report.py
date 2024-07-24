@@ -11,7 +11,7 @@ from testsolar_testtool_sdk.model.test import TestCase
 from testsolar_testtool_sdk.model.testresult import (
     ResultType,
 )
-from testsolar_testtool_sdk.reporter import FileReporter
+from testsolar_testtool_sdk.reporter import FileReporter, LOAD_RESULT_FILE_NAME
 from .prepare_data import (
     generate_demo_load_result,
     send_test_result,
@@ -22,14 +22,15 @@ def test_report_load_result_with_file() -> None:
     # 创建一个Reporter实例
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        reporter = FileReporter(Path(tmpdir))
+        result_file_path = Path(tmpdir) / LOAD_RESULT_FILE_NAME
+        reporter = FileReporter(result_file_path)
         # 创建一个LoadResult实例
         load_result = generate_demo_load_result()
 
         # 调用report_load_result方法
         reporter.report_load_result(load_result)
 
-        re = read_file_load_result(Path(tmpdir))
+        re = read_file_load_result(result_file_path)
 
         assert re == load_result
 
