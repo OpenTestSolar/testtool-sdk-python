@@ -2,9 +2,20 @@
 
 set -exu -o pipefail
 
-pdm run ruff format src
-pdm run ruff format tests
-pdm run ruff check src
-pdm run ruff check tests
-pdm run mypy src --strict
-pdm run pytest tests --durations=5 --cov=. --cov-fail-under=90 --cov-branch --cov-report term
+if [[ -z "${GITHUB_ACTIONS+x}" ]]; then
+  echo "GITHUB_ACTIONS environment variable is not set.Use local mode."
+  uv sync --all-extras --dev
+  uv run ruff format src
+  uv run ruff format tests
+  uv run ruff check src
+  uv run ruff check tests
+  uv run mypy src/ --strict
+  uv run pytest tests --durations=5 --cov=. --cov-fail-under=90 --cov-report term
+else
+  echo "GITHUB_ACTIONS environment variable is set.Use CI mode."
+  uv sync --all-extras --dev
+  uv run ruff check src
+  uv run ruff check tests
+  uv run mypy src/ --strict
+  uv run pytest tests --durations=5 --cov=. --cov-fail-under=90 --cov-report term
+fi

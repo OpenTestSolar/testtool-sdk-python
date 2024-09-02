@@ -29,13 +29,17 @@ keywords = [
     'testsolar'
 ]
 
-[tool.pdm.dev-dependencies]
-dev = [
-    "setuptools>=67",
-    "pytest-cov>=4",
-    "ruff>=0.3.5",
-    "mypy>=1",
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.4",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.4.1",
+    "ruff>=0.6.3",
 ]
 
-[tool.setuptools.package-data]
-"testsolar_testtool_sdk" = ["py.typed"]
+[tool.ruff]
+line-length = 100
