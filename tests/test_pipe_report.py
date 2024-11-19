@@ -3,6 +3,8 @@ import dataclasses
 import io
 import json
 from functools import partial
+import os
+import tempfile
 
 from testsolar_testtool_sdk.model.encoder import DateTimeEncoder
 from testsolar_testtool_sdk.model.load import (
@@ -23,6 +25,7 @@ from testsolar_testtool_sdk.pipe_reader import (
 from testsolar_testtool_sdk.reporter import PipeReporter
 from .prepare_data import (
     generate_demo_load_result,
+    generate_junit_xml,
     generate_test_result,
     send_test_result,
 )
@@ -96,3 +99,17 @@ def test_report_run_case_result_with_pipe():
     assert r4.ResultType == ResultType.SUCCEED
     r5 = read_test_result(pipe_io)
     assert r5.ResultType == ResultType.SUCCEED
+
+
+def test_report_run_case_result_with_junit_xml():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        pipe_io = io.BytesIO()
+        reporter = PipeReporter(pipe_io=pipe_io)
+        xml_file_name = os.path.join(tmpdir, "test.xml")
+        generate_junit_xml(xml_file_name)
+        reporter.report_junit_xml(xml_file_name)
+        pipe_io.seek(0)
+        r: TestResult = read_test_result(pipe_io=pipe_io)
+        assert r.ResultType == ResultType.FAILED
+        assert r.Test.Name == "path/to/case?Test01"
+        assert r.Message == "Test failed"

@@ -1,18 +1,20 @@
 import dataclasses
+from datetime import datetime
 import hashlib
 import json
 import logging
 import os
 import struct
 from pathlib import Path
-from typing import Optional, BinaryIO, Any, Dict
+from typing import List, Optional, BinaryIO, Any, Dict
 from abc import ABC, abstractmethod
+import xml.etree.ElementTree as ET
 
 import portalocker
 
 from .model.encoder import DateTimeEncoder
 from .model.load import LoadResult
-from .model.testresult import TestResult
+from .model.testresult import ResultType, TestResult
 from .model.test import TestCase
 
 # 跟TestSolar uniSDK约定的管道上报魔数，避免乱序导致后续数据全部无法上报
@@ -28,6 +30,11 @@ class BaseReporter(ABC):
 
     @abstractmethod
     def report_case_result(self, case_result: TestResult) -> None: ...
+
+    def report_junit_xml(self, file_path: str) -> None:
+        results = parse_junit_xml(file_path=file_path)
+        for result in results:
+            self.report_case_result(result)
 
 
 class Reporter(BaseReporter):
@@ -96,9 +103,7 @@ class FileReporter(BaseReporter):
         filename = digest_file_name(case_result.Test)
         out_file = self.report_path.joinpath(filename)
 
-        logging.debug(
-            f"Writing case [{case_result.Test.Name}.{retry_id}] results to {out_file}"
-        )
+        logging.debug(f"Writing case [{case_result.Test.Name}.{retry_id}] results to {out_file}")
 
         with open(out_file, "wb") as f:
             data = json.dumps(
@@ -112,7 +117,36 @@ class FileReporter(BaseReporter):
 
 def digest_file_name(case: TestCase) -> str:
     retry_id = case.Attributes.get("retry", "0")
-    filename = (
-        hashlib.md5(f"{case.Name}.{retry_id}".encode("utf-8")).hexdigest() + ".json"
-    )
+    filename = hashlib.md5(f"{case.Name}.{retry_id}".encode("utf-8")).hexdigest() + ".json"
     return filename
+
+
+def parse_junit_xml(file_path: str) -> List[TestResult]:
+    tree = ET.parse(file_path)
+    root = tree.getroot()
+
+    test_results: List[TestResult] = []
+    for testcase in root.findall("testcase"):
+        classname = testcase.get("classname")
+        if not classname:
+            continue
+        name = testcase.get("name")
+        failure = testcase.find("failure")
+
+        result_type = ResultType.SUCCEED
+        message = ""
+        if failure is not None:
+            result_type = ResultType.FAILED
+            message = failure.get("message", "")
+
+        test_case = TestCase(Name=f"{classname.replace('.', '/')}?{name}", Attributes={})
+        test_result = TestResult(
+            Test=test_case,
+            ResultType=result_type,
+            Message=message,
+            Steps=[],
+            StartTime=datetime.now(),
+        )
+        test_results.append(test_result)
+
+    return test_results

@@ -11,15 +11,14 @@ from testsolar_testtool_sdk.model.testresult import (
     TestCaseStep,
 )
 from testsolar_testtool_sdk.reporter import BaseReporter
+from xml.etree.ElementTree import Element, SubElement, tostring
 
 
 def generate_demo_load_result() -> LoadResult:
     r: LoadResult = LoadResult(Tests=[], LoadErrors=[])
 
     for x in range(40):
-        r.Tests.append(
-            TestCase(Name=f"mumu/mu.py/test_case_name_{x}_p1", Attributes={"tag": "P1"})
-        )
+        r.Tests.append(TestCase(Name=f"mumu/mu.py/test_case_name_{x}_p1", Attributes={"tag": "P1"}))
 
     for x in range(20):
         r.LoadErrors.append(
@@ -70,9 +69,7 @@ def generate_testcase_log(index: str) -> TestCaseLog:
             #     AttachmentType=AttachmentType.FILE,
             # ),
         ],
-        AssertError=TestCaseAssertError(
-            Expect="AAA", Actual="BBB", Message="AAA is not BBB"
-        ),
+        AssertError=TestCaseAssertError(Expect="AAA", Actual="BBB", Message="AAA is not BBB"),
         Content=f"采集器：coll-imrv6szb当前状态为0，预期状态为1，状态不一致（0:处理中,1:正常） -> {get_random_unicode(20)}",
     )
 
@@ -121,3 +118,13 @@ def send_test_result(reporter: BaseReporter, index=0):
     run_case_result = generate_test_result(index)
     test_results.append(run_case_result)
     reporter.report_case_result(run_case_result)
+
+
+def generate_junit_xml(file_path: str):
+    root = Element("testsuite")
+    testcase = SubElement(root, "testcase", classname="path.to.case", name="Test01", time="0.123")
+    failure = SubElement(testcase, "failure", message="Test failed", type="AssertionError")
+    failure.text = "Failure details"
+    xml_data = tostring(root).decode()
+    with open(file_path, "w") as f:
+        f.write(xml_data)

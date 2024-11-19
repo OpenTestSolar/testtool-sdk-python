@@ -1,4 +1,5 @@
 import concurrent.futures
+import os
 import tempfile
 from functools import partial
 from pathlib import Path
@@ -12,10 +13,7 @@ from testsolar_testtool_sdk.model.testresult import (
     ResultType,
 )
 from testsolar_testtool_sdk.reporter import FileReporter, LOAD_RESULT_FILE_NAME
-from .prepare_data import (
-    generate_demo_load_result,
-    send_test_result,
-)
+from .prepare_data import generate_demo_load_result, send_test_result, generate_junit_xml
 
 
 def test_report_load_result_with_file() -> None:
@@ -50,3 +48,15 @@ def test_report_run_case_result_with_file():
                 Path(tmpdir), TestCase(Name=f"mumu/mu.py/test_case_name_{i}_p1")
             )
             assert r.ResultType == ResultType.SUCCEED
+
+
+def test_report_run_case_result_with_junit_xml():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        reporter = FileReporter(report_path=Path(tmpdir))
+        xml_file_name = os.path.join(tmpdir, "test.xml")
+        generate_junit_xml(xml_file_name)
+        reporter.report_junit_xml(xml_file_name)
+        r = read_file_test_result(Path(tmpdir), TestCase(Name="path/to/case?Test01"))
+        assert r.ResultType == ResultType.FAILED
+        assert r.Test.Name == "path/to/case?Test01"
+        assert r.Message == "Test failed"
