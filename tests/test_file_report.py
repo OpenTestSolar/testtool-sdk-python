@@ -1,5 +1,4 @@
 import concurrent.futures
-import os
 import tempfile
 from functools import partial
 from pathlib import Path
@@ -13,7 +12,7 @@ from testsolar_testtool_sdk.model.testresult import (
     ResultType,
 )
 from testsolar_testtool_sdk.reporter import FileReporter, LOAD_RESULT_FILE_NAME
-from .prepare_data import generate_demo_load_result, send_test_result, generate_junit_xml
+from .prepare_data import generate_demo_load_result, send_test_result
 
 
 def test_report_load_result_with_file() -> None:
@@ -53,10 +52,17 @@ def test_report_run_case_result_with_file():
 def test_report_run_case_result_with_junit_xml():
     with tempfile.TemporaryDirectory() as tmpdir:
         reporter = FileReporter(report_path=Path(tmpdir))
-        xml_file_name = os.path.join(tmpdir, "test.xml")
-        generate_junit_xml(xml_file_name)
+        xml_file_name = str(Path(__file__).parent.joinpath("testdata/test.xml"))
         reporter.report_junit_xml(xml_file_name)
-        r = read_file_test_result(Path(tmpdir), TestCase(Name="path/to/case?Test01"))
+        r = read_file_test_result(Path(tmpdir), TestCase(Name="test_normal_case?test_success"))
+        assert r.ResultType == ResultType.SUCCEED
+        assert r.Test.Name == "test_normal_case?test_success"
+        r = read_file_test_result(Path(tmpdir), TestCase(Name="test_normal_case?test_failed"))
         assert r.ResultType == ResultType.FAILED
-        assert r.Test.Name == "path/to/case?Test01"
-        assert r.Message == "Test failed"
+        assert r.Test.Name == "test_normal_case?test_failed"
+        assert r.Message
+        assert r.Steps[0].Logs[0].Content
+        r = read_file_test_result(Path(tmpdir), TestCase(Name="test_normal_case?test_raise_error"))
+        assert r.ResultType == ResultType.FAILED
+        assert r.Test.Name == "test_normal_case?test_raise_error"
+        assert r.Message

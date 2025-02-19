@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+    <testsuite name="pytest" errors="0" failures="2" skipped="0" tests="3" time="0.260" timestamp="2025-02-19T16:27:44.755715" hostname="VM-33-192-tencentos">
+        <testcase classname="test_normal_case" name="test_success" time="0.002" />
+        <testcase classname="test_normal_case" name="test_failed" time="0.001">
+            <failure message="assert 4 == 6&#10; +  where 4 = inc(3)">def test_failed():
+        print("this is assert output")
+&gt;       assert inc(3) == 6
+E       assert 4 == 6
+E        +  where 4 = inc(3)
+
+testdata/test_normal_case.py:30: AssertionError</failure>
+        </testcase>
+        <testcase classname="test_normal_case" name="test_raise_error" time="0.001">
+            <failure message="RuntimeError: this is raise runtime error">@pytest.mark.low
+    @pytest.mark.owner("bar")
+    def test_raise_error():
+        print("this is raise output", file=sys.stderr)
+        assert inc(3) == 4
+&gt;       raise RuntimeError("this is raise runtime error")
+E       RuntimeError: this is raise runtime error
+
+testdata/test_normal_case.py:38: RuntimeError</failure>
+        </testcase>
+    </testsuite>
+</testsuites>
