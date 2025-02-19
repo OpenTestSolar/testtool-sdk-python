@@ -14,7 +14,7 @@ import portalocker
 
 from .model.encoder import DateTimeEncoder
 from .model.load import LoadResult
-from .model.testresult import ResultType, TestResult
+from .model.testresult import ResultType, TestResult, TestCaseStep, TestCaseLog, LogLevel
 from .model.test import TestCase
 
 # 跟TestSolar uniSDK约定的管道上报魔数，避免乱序导致后续数据全部无法上报
@@ -32,7 +32,7 @@ class BaseReporter(ABC):
     def report_case_result(self, case_result: TestResult) -> None: ...
 
     def report_junit_xml(self, file_path: str) -> None:
-        results = parse_junit_xml(file_path=file_path)
+        results = _parse_junit_xml(file_path=file_path)
         for result in results:
             self.report_case_result(result)
 
@@ -121,32 +121,51 @@ def digest_file_name(case: TestCase) -> str:
     return filename
 
 
-def parse_junit_xml(file_path: str) -> List[TestResult]:
+def _parse_junit_xml(file_path: str) -> List[TestResult]:
     tree = ET.parse(file_path)
     root = tree.getroot()
 
     test_results: List[TestResult] = []
-    for testcase in root.findall("testcase"):
-        classname = testcase.get("classname")
-        if not classname:
-            continue
-        name = testcase.get("name")
-        failure = testcase.find("failure")
+    for testsuite in root.findall("testsuite"):
+        for testcase in testsuite.findall("testcase"):
+            classname = testcase.get("classname")
+            if not classname:
+                continue
+            name = testcase.get("name")
+            failure = testcase.find("failure")
 
-        result_type = ResultType.SUCCEED
-        message = ""
-        if failure is not None:
-            result_type = ResultType.FAILED
-            message = failure.get("message", "")
+            result_type = ResultType.SUCCEED
+            message = ""
+            content = ""
+            if failure is not None:
+                result_type = ResultType.FAILED
+                message = failure.get("message", "")
+                if failure.text:
+                    content = failure.text.strip()
 
-        test_case = TestCase(Name=f"{classname.replace('.', '/')}?{name}", Attributes={})
-        test_result = TestResult(
-            Test=test_case,
-            ResultType=result_type,
-            Message=message,
-            Steps=[],
-            StartTime=datetime.now(),
-        )
-        test_results.append(test_result)
+            test_case = TestCase(Name=f"{classname.replace('.', '/')}?{name}", Attributes={})
+            test_result = TestResult(
+                Test=test_case,
+                ResultType=result_type,
+                Message=message,
+                Steps=[
+                    TestCaseStep(
+                        Title="",
+                        ResultType=result_type,
+                        StartTime=datetime.now(),
+                        Logs=[
+                            TestCaseLog(
+                                Time=datetime.now(),
+                                Level=LogLevel.ERROR
+                                if result_type == ResultType.FAILED
+                                else LogLevel.INFO,
+                                Content=content,
+                            )
+                        ],
+                    )
+                ],
+                StartTime=datetime.now(),
+            )
+            test_results.append(test_result)
 
     return test_results
