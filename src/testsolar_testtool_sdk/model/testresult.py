@@ -76,6 +76,7 @@ class TestCaseStep:
     ResultType: ResultType
     EndTime: Optional[datetime] = None
     Logs: List[TestCaseLog] = field(default_factory=list)
+    ExtraData: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

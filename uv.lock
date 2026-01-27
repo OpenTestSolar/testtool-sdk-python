@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.7"
 
 [[package]]
@@ -195,7 +196,7 @@ name = "portalocker"
 version = "2.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pywin32", marker = "platform_system == 'Windows'" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1f/f8/969e6f280201b40b31bcb62843c619f343dcc351dff83a5891530c9dd60e/portalocker-2.7.0.tar.gz", hash = "sha256:032e81d534a88ec1736d03f780ba073f047a06c478b06e2937486f334e955c51", size = 20183 }
 wheels = [
@@ -281,7 +282,7 @@ wheels = [
 
 [[package]]
 name = "testsolar-testtool-sdk"
-version = "0.4.4"
+version = "0.4.6"
 source = { editable = "." }
 dependencies = [
     { name = "dacite" },
