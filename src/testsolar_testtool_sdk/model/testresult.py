@@ -89,6 +89,7 @@ class TestResult:
     Message: str
     EndTime: Optional[datetime] = None
     Steps: List[TestCaseStep] = field(default_factory=list)
+    Context: Dict[str, str] = field(default_factory=dict)
 
     def is_final(self) -> bool:
         return self.ResultType in [
